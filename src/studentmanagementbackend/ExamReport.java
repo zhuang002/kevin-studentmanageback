@@ -5,13 +5,16 @@
  */
 package studentmanagementbackend;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  *
  * @author zhuan
  */
-class ExamReport extends Entity {
+public class ExamReport extends Entity implements Serializable {
     private String examId;
     private String studentId;
     int score;
@@ -49,7 +52,7 @@ class ExamReport extends Entity {
         this.date = date;
     }
     
-    public Exam getExam() {
+    public Exam getExam() throws ClassNotFoundException, IOException {
         return Database.getExam(this.examId);
     }
     
@@ -57,7 +60,7 @@ class ExamReport extends Entity {
         this.examId=exam.getId();
     }
     
-    public Student getStudent() {
+    public Student getStudent() throws IOException, FileNotFoundException, ClassNotFoundException {
         return Database.getStudent(this.studentId);
     }
     
@@ -80,8 +83,5 @@ class ExamReport extends Entity {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
-    public Entity get(String id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    
 }

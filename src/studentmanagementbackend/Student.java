@@ -5,11 +5,13 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-public class Student extends Entity {
+public class Student extends Entity implements Serializable{
 
     String name;
     int age;
@@ -71,21 +73,22 @@ public class Student extends Entity {
 
     @Override
     public void save() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveStudent(this);
     }
 
     @Override
     public void update() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveStudent(this);
     }
 
     @Override
     public void delete() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.deleteStudent(this);
     }
 
     @Override
-    public Student get(String id) {
-        return Database.getStudent(id);
+    public String toString() {
+        return this.getId()+" "+this.name;
     }
+    
 }

@@ -5,12 +5,14 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-public abstract class Entity {
-    private String id;
+public abstract class Entity implements Serializable,Comparable<Entity> {
+    private String id=null;
 
     public String getId() {
         return id;
@@ -20,9 +22,21 @@ public abstract class Entity {
         this.id = id;
     }
     
+    @Override
+    public int compareTo(Entity o) {
+        return this.id.compareTo(o.getId());
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Entity)
+            return this.id.equals(((Entity)o).getId());
+        return false;
+    }
+    
     abstract public void save();
     abstract public void update();
     abstract public void delete();
-    abstract public Entity get(String id);
+    
     
 }

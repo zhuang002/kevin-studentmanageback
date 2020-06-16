@@ -5,11 +5,13 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-class Contact {
+public class Contact implements Serializable{
     String homephone;
     String cellphone;
     String email;

@@ -5,11 +5,13 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-class Address {
+public class Address implements Serializable {
     String room;
     String streetNumber;
     String steet;

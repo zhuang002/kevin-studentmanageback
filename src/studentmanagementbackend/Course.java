@@ -5,14 +5,16 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-class Course extends Entity {
+public class Course extends Entity implements Serializable {
     String name;
     String description;
-    int credit;
+    double credit;
 
     public String getName() {
         return name;
@@ -22,7 +24,7 @@ class Course extends Entity {
         return description;
     }
 
-    public int getCredit() {
+    public double getCredit() {
         return credit;
     }
 
@@ -34,29 +36,30 @@ class Course extends Entity {
         this.description = description;
     }
 
-    public void setCredit(int credit) {
+    public void setCredit(double credit) {
         this.credit = credit;
     }
 
     @Override
     public void save() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveCourse(this);
     }
 
     @Override
     public void update() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveCourse(this);
     }
 
     @Override
     public void delete() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.deleteCourse(this);
     }
 
     @Override
-    public Entity get(String id) {
-        return Database.getCourse(id);
+    public String toString() {
+        return this.getId()+" "+this.name;
     }
+    
     
     
 }

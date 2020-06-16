@@ -5,11 +5,13 @@
  */
 package studentmanagementbackend;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhuan
  */
-public class Exam  extends Entity{
+public class Exam  extends Entity implements Serializable{
 
     String description;
     Course course;
@@ -43,22 +45,24 @@ public class Exam  extends Entity{
 
     @Override
     public void save() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveExam(this);
     }
 
     @Override
     public void update() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.saveExam(this);
     }
 
     @Override
     public void delete() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Database.deleteExam(this);
+    }
+    
+    @Override
+    public String toString() {
+        return this.getId()+"-"+this.getDescription();
     }
 
-    @Override
-    public Exam get(String id) {
-        return Database.getExam(id);
-    }
+    
     
 }
