@@ -6,6 +6,7 @@
 package studentmanagementbackend;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -33,6 +34,8 @@ public abstract class Entity implements Serializable,Comparable<Entity> {
             return this.id.equals(((Entity)o).getId());
         return false;
     }
+
+    
     
     abstract public void save();
     abstract public void update();
