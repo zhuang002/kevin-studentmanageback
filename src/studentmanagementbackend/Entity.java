@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *
+ *The parent class of all entity classes that contains an ID.
  * @author zhuan
  */
 public abstract class Entity implements Serializable,Comparable<Entity> {
@@ -23,11 +23,21 @@ public abstract class Entity implements Serializable,Comparable<Entity> {
         this.id = id;
     }
     
+    /**
+     * 
+     * @param o
+     * @return 
+     */
     @Override
     public int compareTo(Entity o) {
         return this.id.compareTo(o.getId());
     }
     
+    /**
+     * The overrides of equals to compare 2 objects with their ids.
+     * @param o the object to be compared.
+     * @return true for equal, false for different.
+     */
     @Override
     public boolean equals(Object o) {
         if (o instanceof Entity)

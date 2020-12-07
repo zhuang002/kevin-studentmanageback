@@ -8,7 +8,7 @@ package studentmanagementbackend;
 import java.io.Serializable;
 
 /**
- *
+ *The class that represents an address information
  * @author zhuan
  */
 public class Address implements Serializable {
@@ -19,6 +19,10 @@ public class Address implements Serializable {
     String province;
     String postcode;
 
+    /**
+     * Set the property of room number.
+     * @param room the room number to be set.
+     */
     public void setRoom(String room) {
         this.room = room;
     }
