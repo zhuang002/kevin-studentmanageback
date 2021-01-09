@@ -5,13 +5,13 @@
  */
 package studentmanagementbackend;
 
-import java.io.Serializable;
+import java.sql.SQLException;
 
 /**
  *
  * @author zhuan
  */
-public class Student extends Entity implements Serializable{
+public class Student extends Entity {
 
     String name;
     int age;
@@ -72,18 +72,18 @@ public class Student extends Entity implements Serializable{
     }
 
     @Override
-    public void save() {
-        Database.saveStudent(this);
+    public void save() throws SQLException {
+        new Database().saveStudent(this);
     }
 
     @Override
-    public void update() {
-        Database.saveStudent(this);
+    public void update() throws SQLException {
+        new Database().saveStudent(this);
     }
 
     @Override
-    public void delete() {
-        Database.deleteStudent(this);
+    public void delete() throws SQLException {
+        new Database().deleteStudent(this);
     }
 
     @Override

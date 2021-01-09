@@ -7,6 +7,7 @@ package studentmanagementbackend;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.sql.SQLException;
 
 /**
  *
@@ -50,16 +51,16 @@ public class ExamReport extends Entity implements Serializable {
         this.date = date;
     }
     
-    public Exam getExam() {
-        return Database.getExam(this.examId);
+    public Exam getExam() throws SQLException {
+        return new Database().getExam(this.examId);
     }
     
     public void setExam(Exam exam) {
         this.examId=exam.getId();
     }
     
-    public Student getStudent()  {
-        return Database.getStudent(this.studentId);
+    public Student getStudent() throws SQLException {
+        return new Database().getStudent(this.studentId);
     }
     
     public void setStudent(Student student) {
@@ -67,18 +68,18 @@ public class ExamReport extends Entity implements Serializable {
     }
 
     @Override
-    public void save() {
-        Database.saveExamReport(this);
+    public void save() throws SQLException {
+        new Database().saveExamReport(this);
     }
 
     @Override
-    public void update() {
-        Database.saveExamReport(this);
+    public void update() throws SQLException {
+        new Database().saveExamReport(this);
     }
 
     @Override
-    public void delete() {
-        Database.deleteExamReport(this);
+    public void delete() throws SQLException {
+        new Database().deleteExamReport(this);
     }
 
     

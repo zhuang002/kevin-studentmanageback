@@ -7,6 +7,7 @@ package studentmanagementbackend;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.sql.SQLException;
 
 /**
  *The parent class of all entity classes that contains an ID.
@@ -47,9 +48,9 @@ public abstract class Entity implements Serializable,Comparable<Entity> {
 
     
     
-    abstract public void save();
-    abstract public void update();
-    abstract public void delete();
+    abstract public void save() throws SQLException;
+    abstract public void update()throws SQLException;
+    abstract public void delete() throws SQLException;
     
     
 }

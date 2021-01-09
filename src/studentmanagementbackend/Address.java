@@ -55,7 +55,7 @@ public class Address implements Serializable {
         return streetNumber;
     }
 
-    public String getSteet() {
+    public String getStreet() {
         return steet;
     }
 

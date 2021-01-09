@@ -4,17 +4,11 @@
  * and open the template in the editor.
  */
 package studentmanagementbackend;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.Properties;
+import java.sql.*;
+import java.text.SimpleDateFormat;
 
 /**
  *
@@ -22,106 +16,271 @@ import java.util.Hashtable;
  */
 public class Database {
 
-    static private Hashtable<String, Student> students = null;
-    static private Hashtable<String, Exam> exams = null;
-    static private Hashtable<String, Course> courses = null;
-    static private Hashtable<String, ExamReport> examReports = null;
-    static private Hashtable<String, ArrayList<ExamReport>> studentExamReports = null;
+    private static Connection dbConnection = null;
 
-    static public Exam getExam(String id) {
-        if (exams == null) {
-            loadAll();
+    public Database() throws SQLException {
+        Properties connectionProps = new Properties();
+        connectionProps.put("user", "developer");
+        connectionProps.put("password", "developer");
+        if (dbConnection == null) {
+            dbConnection = DriverManager.getConnection(
+                    "jdbc:mariadb://localhost:3306/studentdb",
+                    connectionProps);
         }
-        return exams.get(id);
     }
 
-    static public Student getStudent(String studentId) {
-        if (students == null) {
-            loadAll();
-        }
-        return students.get(studentId);
-    }
+    public Exam getExam(String id) throws SQLException {
+        String sql = "Select id,description,course,percentage From exam Where id=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        statement.setInt(1, Integer.parseInt(id));
+        Exam exam = null;
+        try {
+            ResultSet result = statement.executeQuery();
+            exam = new Exam();
+            if (result.next()) {
+                exam.setId(result.getString("id"));
+                exam.setDescription(result.getString("description"));
+                Course course = getCourse(result.getString("course"));
+                exam.setCourse(course);
+                exam.setPercentage(result.getInt("percentage"));
 
-    static public Course getCourse(String id) {
-        if (courses == null) {
-            loadAll();
-        }
-        return courses.get(id);
-    }
-
-    static public ExamReport getExamReport(String id) {
-        if (examReports == null) {
-            loadAll();
-        }
-        return examReports.get(id);
-    }
-
-    public static void loadAll() {
-        if (students == null) {
-            try {
-                ObjectInputStream in = new ObjectInputStream(new FileInputStream("studentmanagement.db"));
-
-                students = (Hashtable<String, Student>) in.readObject();
-                courses = (Hashtable<String, Course>) in.readObject();
-                exams = (Hashtable<String, Exam>) in.readObject();
-                examReports = (Hashtable<String, ExamReport>) in.readObject();
-                examReports.values().forEach((examReport) -> {  // for (ExamReport examReport:examReports.values){
-                    addExamReportToStudentExamReports(examReport);
-
-                });
-                in.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                students = new Hashtable<>();
-                courses = new Hashtable<>();
-                exams = new Hashtable<>();
-                examReports = new Hashtable<>();
-                studentExamReports=new Hashtable<>();
             }
+        } finally {
+            statement.close();
         }
+        return exam;
     }
 
-    public static void saveAll() {
-        if (students != null) {
-            try {
-                ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("studentmanagement.db"));
-                out.writeObject(students);
-                out.writeObject(courses);
-                out.writeObject(exams);
-                out.writeObject(examReports);
-                out.close();
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
+    public Student getStudent(String studentId) throws SQLException {
+        String sql = "Select student.id,student.name, student.age,student.gender,student.grade,student.hompephone,"
+                + "student.cellphone,student.email,address.room, address.streetNumber,address.street,address.city,"
+                + "address.province,address.postcode From student,address Where student.addressId=address.id And student.id=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        statement.setInt(1, Integer.parseInt(studentId));
+        Student student = null;
+        try {
+            ResultSet result = statement.executeQuery();
+            student = new Student();
+            if (result.next()) {
+                student.setId(result.getString(1));
+                student.setName(result.getString(2));
+                student.setAge(result.getInt(3));
+                int gender = result.getInt(4);
+                if (gender == 0) {
+                    student.setGender(Gender.Male);
+                } else {
+                    student.setGender(Gender.Female);
+                }
+                student.setGrade(result.getInt(5));
+                Contact contact = new Contact();
+                contact.setHomephone(result.getString(6));
+                contact.setCellphone(result.getString(7));
+                contact.setEmail(result.getString(8));
+                student.setContact(contact);
+                Address address = new Address();
+                address.setRoom(result.getString(9));
+                address.setStreetNumber(result.getString(10));
+                address.setSteet(result.getString(11));
+                address.setCity(result.getString(12));
+                address.setPostcode(result.getString(13));
+                address.setPostcode(result.getString(14));
+                student.setAddress(address);
+
             }
+        } finally {
+            statement.close();
+        }
+        return student;
+    }
+
+    public Course getCourse(String id) throws SQLException {
+        String sql = "Select name,description,credit From course Where id=? ";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        statement.setString(1, id);
+        Course course = null;
+        try {
+            ResultSet result = statement.executeQuery();
+            course = new Course();
+            if (result.next()) {
+                course.setId(id);
+                course.setName(result.getString("name"));
+                course.setDescription(result.getString("description"));
+                course.setCredit(result.getDouble("credit"));
+            }
+        } finally {
+            statement.close();
+        }
+        return course;
+    }
+
+    public ExamReport getExamReport(String id) throws SQLException {
+        String sql = "Select examId,studentId,score,testingDate From exam_report Where id=? ";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        statement.setString(1, id);
+        ExamReport examReport = new ExamReport();
+        try {
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                examReport.setId(id);
+                examReport.setExamId(result.getString("examId"));
+                examReport.setStudentId(result.getString("studentId"));
+                examReport.score = result.getInt("score");
+                examReport.setDate(result.getDate("testingDate"));
+            }
+        } finally {
+            statement.close();
+        }
+        return examReport;
+    }
+
+    static void loadAll() {
+    }
+
+    public void saveAll() {
+
+    }
+
+    public ArrayList<Student> getAllStudents() throws SQLException {
+        String sql = "Select student.id,student.name, student.age,student.gender,student.grade,student.hompephone,"
+                + "student.cellphone,student.email,address.room, address.streetNumber,address.street,address.city,"
+                + "address.province,address.postcode From student,address Where student.addressId=address.id order by student.name";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        ArrayList<Student> students = new ArrayList<>();
+        try {
+            ResultSet result = statement.executeQuery();
+
+            while (result.next()) {
+                Student student = new Student();
+                student.setId(result.getString(1));
+                student.setName(result.getString(2));
+                student.setAge(result.getInt(3));
+                int gender = result.getInt(4);
+                if (gender == 0) {
+                    student.setGender(Gender.Male);
+                } else {
+                    student.setGender(Gender.Female);
+                }
+                student.setGrade(result.getInt(5));
+                Contact contact = new Contact();
+                contact.setHomephone(result.getString(6));
+                contact.setCellphone(result.getString(7));
+                contact.setEmail(result.getString(8));
+                student.setContact(contact);
+                Address address = new Address();
+                address.setRoom(result.getString(9));
+                address.setStreetNumber(result.getString(10));
+                address.setSteet(result.getString(11));
+                address.setCity(result.getString(12));
+                address.setPostcode(result.getString(13));
+                address.setPostcode(result.getString(14));
+                student.setAddress(address);
+                students.add(student);
+            }
+        } finally {
+            statement.close();
+        }
+        return students;
+    }
+
+    void saveStudent(Student student) throws SQLException {
+        String sql = "Select id From address Where room=? and streetNumber=? and street=? and city=? and province=? and postcode=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        int addressId = 0;
+        try {
+            statement.setString(1, student.address.getRoom());
+            statement.setString(2, student.address.getStreetNumber());
+            statement.setString(3, student.address.getStreet());
+            statement.setString(4, student.address.getCity());
+            statement.setString(5, student.address.getProvince());
+            statement.setString(6, student.address.getPostcode());
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) { // found address
+                addressId = result.getInt("id");
+            } else { // not found. insert a new address.
+                statement.close();
+                sql = "Insert Into address (room,streetNumber,street,city,province,postcode) Values (?,?,?,?,?,?)";
+                statement = Database.dbConnection.prepareStatement(sql);
+                statement.setString(1, student.getAddress().getRoom());
+                statement.setString(2, student.getAddress().getStreetNumber());
+                statement.setString(3, student.getAddress().getStreet());
+                statement.setString(4, student.getAddress().getCity());
+                statement.setString(5, student.getAddress().getProvince());
+                statement.setString(6, student.getAddress().getPostcode());
+
+                statement.executeUpdate();
+
+                statement.close();
+                sql = "Select LAST_INSERT_ID()";
+                statement = Database.dbConnection.prepareStatement(sql);
+                result = statement.executeQuery();
+                if (result.next()) {
+                    addressId = result.getInt(1);
+                }
+            }
+        } finally {
+            statement.close();
+        }
+
+        int gender;
+        if (student.getGender() == Gender.Male) {
+            gender = 0;
+        } else {
+            gender = 1;
+        }
+
+        sql = "Replace student (name,age,gender,grade,homephone,cellphone,email,addressId) Values (?,?,?,?,?,?,?,?,?) Where id=?";
+        statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, student.getName());
+            statement.setInt(2, student.getAge());
+            statement.setInt(3, gender);
+            statement.setInt(4, student.getGrade());
+            statement.setString(5, student.getContact().getHomephone());
+            statement.setString(6, student.getContact().getCellphone());
+            statement.setString(7, student.getContact().getEmail());
+            statement.setInt(8, addressId);
+            statement.setString(9, student.getId());
+
+            statement.executeUpdate();
+        } finally {
+            statement.close();
         }
     }
 
-    public static ArrayList<Student> getAllStudents() {
-        if (students == null) {
-            loadAll();
+    void deleteStudent(Student student) throws SQLException {
+
+        String sql = "Delete From student Where id=? ";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, student.getId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
         }
-
-        ArrayList<Student> ret = new ArrayList<>(students.values());
-        Collections.sort(ret);
-        return ret;
     }
 
-    static void saveStudent(Student student) {
-        students.put(student.getId(), student);
-    }
+    public ArrayList<Exam> getAllExams() throws SQLException {
+        ArrayList<Exam> ar = new ArrayList<>();
+        String sql = "Select id,description,course,percentage From exam order by id";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            ResultSet result = statement.executeQuery();
 
-    static void deleteStudent(Student student) {
-        students.remove(student.getId());
-    }
-
-    public static ArrayList<Exam> getAllExams() {
-        if (exams == null) {
-            loadAll();
+            while (result.next()) {
+                Exam exam = new Exam();
+                exam.setId(result.getString("id"));
+                exam.setDescription(result.getString("description"));
+                Course course = getCourse(result.getString("course"));
+                exam.setCourse(course);
+                exam.setPercentage(result.getInt("percentage"));
+                ar.add(exam);
+            }
+        } finally {
+            statement.close();
         }
-        ArrayList<Exam> ret = new ArrayList<>(exams.values());
-        Collections.sort(ret);
-        return ret;
+        return ar;
     }
 
     /*public static ExamReport findExamReport(String examReportId) {
@@ -130,61 +289,142 @@ public class Database {
         }
         return null;
     }*/
+    public ArrayList<Course> getAllCourses() throws SQLException {
+        ArrayList<Course> ar = new ArrayList<>();
+        String sql = "Select id, name,description,credit From course order by id";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            ResultSet result = statement.executeQuery();
 
-    public static ArrayList<Course> getAllCourses() {
-        if (courses == null) {
-            loadAll();
+            while (result.next()) {
+                Course course = new Course();
+                course.setId(result.getString("id"));
+                course.setName(result.getString("name"));
+                course.setDescription(result.getString("description"));
+                course.setCredit(result.getDouble("credit"));
+                ar.add(course);
+            }
+        } finally {
+            statement.close();
         }
-        ArrayList<Course> ret = new ArrayList<>(courses.values());
-        Collections.sort(ret);
-        return ret;
+        return ar;
     }
 
-    static void saveCourse(Course course) {
-        courses.put(course.getId(), course);
+    void saveCourse(Course course) throws SQLException {
+
+        String sql = "Replace (name,description,credit) Values (?,?,?) From course Where id=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, course.getName());
+            statement.setString(2, course.getDescription());
+            statement.setDouble(3, course.getCredit());
+            statement.setString(4, course.getId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static void deleteCourse(Course course) {
-        courses.remove(course.getId());
+    void deleteCourse(Course course) throws SQLException {
+
+        String sql = "Delete From course Where id=? ";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, course.getId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static void saveExam(Exam exam) {
-        exams.put(exam.getId(), exam);
+    void saveExam(Exam exam) throws SQLException {
+        String sql = "Replace (description,course, percentage) Values (?,?,?) From exam Where id=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, exam.getDescription());
+            statement.setString(2, exam.getCourse().getId());
+            statement.setInt(3, exam.getPercentage());
+            statement.setString(4, exam.getId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static void deleteExam(Exam exam) {
-        exams.remove(exam.getId());
+    void deleteExam(Exam exam) throws SQLException {
+        String sql = "Delete From exam Where id=? ";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, exam.getId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static void saveExamReport(ExamReport examReport) {
-        examReports.put(examReport.getId(), examReport);
-        addExamReportToStudentExamReports(examReport);
+    void saveExamReport(ExamReport examReport) throws SQLException {
+        String sql = "Replace (score,testDate) Values (?,?) From course Where examId=? and studentId=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setInt(1, examReport.getScore());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
+            statement.setDate(2, java.sql.Date.valueOf(dateFormat.format(examReport.getDate())));
+            statement.setString(3, examReport.getExamId());
+            statement.setString(4, examReport.getStudentId());
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static void deleteExamReport(ExamReport examReport) {
-        examReports.remove(examReport.getId());
+    void deleteExamReport(ExamReport examReport) throws SQLException {
+
+        String sql = "Delete From exam_report Where studentId=? and examId=?";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, examReport.getStudentId());
+            statement.setString(2, examReport.getExamId());
+
+            statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
     }
 
-    static int getCurrentSemester() {
+    int getCurrentSemester() {
         Date date = new Date();
         return getSemester(date);
 
     }
 
-    public static ArrayList<ExamReport> getStudentExams(String studentId) {
-        ArrayList<ExamReport> ret = new ArrayList();
-        ArrayList<ExamReport> reports = studentExamReports.get(studentId);
-        reports.forEach((examReport -> {
-            Date today = new Date();
-            if (examReport.getDate().getYear() == today.getYear()
-                    && getSemester(examReport.getDate()) == getSemester(today)) {
-                ret.add(examReport);
+    public ArrayList<ExamReport> getStudentExams(String studentId) throws SQLException {
+        String sql = "Select examId,studentId,score,testingDate From exam_report Where studentId=? order by testingDate order by DESC";
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        ArrayList<ExamReport> al = new ArrayList<>();
+
+        try {
+            statement.setString(1, studentId);
+            ResultSet result = statement.executeQuery();
+
+            while (result.next()) {
+
+                ExamReport examReport = new ExamReport();
+                examReport.setExamId(result.getString(1));
+                examReport.setStudentId(result.getString(2));
+                examReport.setScore(result.getInt(3));
+                examReport.setDate(result.getDate(4));
+                al.add(examReport);
             }
-        }));
-        return ret;
+        } finally {
+            statement.close();
+        }
+
+        return al;
+
     }
 
-    private static int getSemester(Date date) {
+    private int getSemester(Date date) {
         if (date.getMonth() < 9) {
             return 2;
         } else {
@@ -192,14 +432,23 @@ public class Database {
         }
     }
 
-    private static void addExamReportToStudentExamReports(ExamReport examReport) {
-        if (studentExamReports==null) studentExamReports=new Hashtable<>();
-        if (!studentExamReports.containsKey(examReport.getStudentId())) {
-            studentExamReports.put(examReport.getStudentId(), new ArrayList<>());
+    private void addExamReportToStudentExamReports(ExamReport examReport) throws SQLException {
+        String sql = "Replace exam_report (examId,studentId,score,testingDate) Values (?,?,?,?)";
+
+        PreparedStatement statement = Database.dbConnection.prepareStatement(sql);
+        try {
+            statement.setString(1, examReport.getExamId());
+            statement.setString(2, examReport.getStudentId());
+            statement.setInt(3, examReport.getScore());
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+            statement.setDate(4, java.sql.Date.valueOf(dateFormat.format(examReport.getDate())));
+
+            statement.executeUpdate();
+        } finally {
+            statement.close();
         }
-        ArrayList<ExamReport> reports = studentExamReports.get(examReport.getStudentId());
-        reports.add(examReport);
-        studentExamReports.put(examReport.getStudentId(), reports);
+
     }
 
 }

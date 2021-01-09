@@ -6,7 +6,7 @@
 package studentmanagementbackend;
 
 import java.io.Serializable;
-
+import java.sql.SQLException;
 /**
  *
  * @author zhuan
@@ -44,18 +44,18 @@ public class Exam  extends Entity implements Serializable{
     
 
     @Override
-    public void save() {
-        Database.saveExam(this);
+    public void save() throws SQLException  {
+        new Database().saveExam(this);
     }
 
     @Override
-    public void update() {
-        Database.saveExam(this);
+    public void update() throws SQLException {
+        new Database().saveExam(this);
     }
 
     @Override
-    public void delete() {
-        Database.deleteExam(this);
+    public void delete() throws SQLException {
+        new Database().deleteExam(this);
     }
     
     @Override

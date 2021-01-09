@@ -6,6 +6,7 @@
 package studentmanagementbackend;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 
 /**
  *
@@ -41,18 +42,18 @@ public class Course extends Entity implements Serializable {
     }
 
     @Override
-    public void save() {
-        Database.saveCourse(this);
+    public void save() throws SQLException {
+        new Database().saveCourse(this);
     }
 
     @Override
-    public void update() {
-        Database.saveCourse(this);
+    public void update() throws SQLException {
+        new Database().saveCourse(this);
     }
 
     @Override
-    public void delete() {
-        Database.deleteCourse(this);
+    public void delete() throws SQLException {
+        new Database().deleteCourse(this);
     }
 
     @Override
